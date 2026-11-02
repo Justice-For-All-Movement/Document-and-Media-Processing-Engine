@@ -55,3 +55,8 @@ No-output settlement/retry now check exact known Processing output intent/artifa
 ## Direct TLS transport bridge
 
 [Node reconciliation listener](NODE_RECONCILIATION_LISTENER.md) adapts direct HTTPS HTTP/1.1 requests to the accepted Fetch handler with exact authority, private bounded streams, cancellation and conservative unknown outcomes. The host supplies and limits its HTTPS server/certificates/session service. Loopback TLS tests are distinct from production login/TLS/proxy/browser acceptance and database-network qualification.
+
+## Exact UTF8 admission snapshot
+
+The direct UTF8 API requires a literal boolean processing grant. It detaches context and validates a detached exact source reference before tenant/project admission. Caller-owned bytes and source digest are read once; a bounded independent byte snapshot is used for both integrity verification and strict decoding. Returned provenance uses only the admitted reference and verified digest, preventing caller property re-reads from changing the source edition after admission. These local checks do not authenticate a caller-supplied clean/permission assertion; a trusted current-policy gateway remains mandatory.
+

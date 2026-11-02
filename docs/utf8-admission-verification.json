@@ -1,0 +1,9 @@
+{
+  "unitId": "DMP-001",
+  "baseSha": "accd879c27bef4890e027d895c2e9324e3bf89c9",
+  "scope": "Strict runtime authorization and exact source/byte snapshot binding in UTF8 extraction",
+  "reproducedBeforeFix": {"command":"node --test tests/processing.test.ts","passed":5,"failed":4,"cases":["Truthy non-boolean processing permission accepted","Caller byte property re-read rather than snapshot","Source reference re-read after scope admission","Malformed source references accepted"]},
+  "localFocusedVerification": {"command":"node --test tests/processing.test.ts","passed":11,"failed":0,"additionalCases":["Hash provenance read only once","Non-byte containers rejected"]},
+  "review": ["Context and source reference detached before reference validation and scope admission","Permission must be literal true and scan result clean","Bounded byte input copied; same snapshot hashed and decoded","Output uses verified captured source and hash rather than later caller property reads","Existing malformed UTF8, NUL, size, scope and digest rejections retained"],
+  "limits": ["Full typecheck/build, dependency-backed tests, Docker and PostgreSQL require exact-head hosted CI, not claimed from focused local suite","Trusted gateway must establish current processing policy, source authenticity and scan authorization","No live corpus processing, model call, deployment or production acceptance"]
+}
