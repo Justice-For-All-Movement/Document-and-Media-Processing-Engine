@@ -261,7 +261,7 @@ export function createEngine(deps: EngineDeps): ProcessingEngine {
     if (d.decision !== 'allow') throw new DomainError('consent_denied', `Use decision is ${d.decision}: ${d.reasons.join('; ').slice(0, 300)}`);
   }
   function sameObject(a: string, b: string): boolean {
-    try { const x = kit.parseUref(a), y = kit.parseUref(b); return x.engine === y.engine && x.id === y.id && (x.kind === y.kind) && (x.revision === undefined || y.revision === undefined || x.revision === y.revision); } catch { return false; }
+    try { const x = kit.parseUref(a), y = kit.parseUref(b); const item = (k: string): boolean => k === 'evidence' || k === 'evidence_version'; return x.engine === y.engine && x.id === y.id && (x.kind === y.kind || (item(x.kind) && item(y.kind))) && (x.revision === undefined || y.revision === undefined || x.revision === y.revision); } catch { return false; }
   }
   function evidence(): kit.EvidencePort {
     if (ports.evidence === undefined) throw new DomainError('unavailable', 'No evidence port is configured');
@@ -1031,8 +1031,9 @@ export function createEngine(deps: EngineDeps): ProcessingEngine {
         if (p.blocked) throw new DomainError('consent_denied', 'Processing is blocked');
         invariant(['failed', 'partial', 'cancelled'].includes(p.state), 'invalid_state', `Processing in state ${p.state} cannot be retried`);
         await gate(ctx, p);
-        const steps = await tx.query<StepRow>(`update ${S}.step set state='queued', error=null, job_id=null, finished_at=null where processing_id=$1 and state in ('failed','unavailable','denied','cancelled') returning *`, [p.id]);
+        const steps = await tx.query<StepRow>(`select * from ${S}.step where processing_id=$1 and state in ('failed','unavailable','denied','cancelled') for update`, [p.id]);
         await tx.query(`delete from ${S}._jobs where id = any($1::uuid[]) and state in ('done','dead','cancelled','failed')`, [steps.map((s) => s.job_id).filter((j) => j !== null)]);
+        await tx.query(`update ${S}.step set state='queued', error=null, job_id=null, finished_at=null where id = any($1::uuid[])`, [steps.map((s) => s.id)]);
         const hadPlan = (await tx.query(`select 1 from ${S}.step where processing_id=$1 limit 1`, [p.id])).length > 0;
         await tx.query(`update ${S}.processing set state=$2, failure=null, updated_at=$3 where id=$1`, [p.id, hadPlan ? 'running' : 'queued', ctx.now]);
         if (hadPlan) await advance(tx, ctx, { ...p, state: 'running' });

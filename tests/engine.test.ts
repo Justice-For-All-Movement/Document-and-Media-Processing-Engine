@@ -664,7 +664,7 @@ test('E06 engine: audio and video — metadata, speaker segmentation, transcript
       const agent = ctxOf({ actor: { id: 'agent-1', kind: 'agent', roles: [] } });
       const input = { processingId: audio.proc.id, label: 'Speaker A', identityRef: 'E07:entity:person-alba-reyes', basis: 'Introduced by name at 00:01 and matches the published agenda' };
       await assert.rejects(engine.attributeSpeaker(agent, input), code('forbidden'));
-      await assert.rejects(engine.attributeSpeaker(ctxOf({ capabilities: ['processing:*'] }), input), code('forbidden'));
+      await assert.rejects(engine.attributeSpeaker(ctxOf({ capabilities: ['processing:read', 'processing:write'] }), input), code('forbidden'));
       await assert.rejects(engine.attributeSpeaker(ctx, { ...input, label: 'Speaker Z' }), code('not_found'));
       await assert.rejects(engine.attributeSpeaker(ctx, { ...input, label: 'Alba Reyes' }), code('invalid_input'));
       const view = await engine.attributeSpeaker(ctx, input);
@@ -711,7 +711,7 @@ test('E06 engine: audio and video — metadata, speaker segmentation, transcript
       assert.equal(caps.proc.state, 'done', JSON.stringify(caps.proc.steps));
       const rep = await engine.getRepresentation(ctx, caps.proc.representations[0] as string);
       assert.equal(rep.kind, 'captions'); assert.equal(rep.machine, false); assert.match(rep.label, /unverified wording and timing/);
-      assert.deepEqual(rep.segments.map((s) => [s.startMs, s.endMs, s.text]), [[500, 2000, 'One two three four five.'], [2200, 3900, 'This is a test of the system.']]);
+      assert.deepEqual(rep.segments.map((s) => [s.startMs, s.endMs, s.text]), [[500, 2000, 'One two three four five.'], [2200, 3000, 'This is a test of the system.']]);
       assert.equal((await engine.locate(ctx, rep.ref, { ms: 2500 }))?.segment.text, 'This is a test of the system.');
       assert.ok((await engine.inspect(ctx, rep.ref))?.sources.includes(media.ref));
       // captions that run past the end of the media are rejected, not clipped

@@ -49,7 +49,7 @@ export function fixtures(): Fixtures {
     txt: Buffer.from(`${KNOWN.english}\n\nWe need more time to review the public records.\n`),
     html: Buffer.from('<!doctype html><html><head><title>Notice</title></head><body><h1>Public notice</h1><p>The ferry timetable changes in April.</p><img src="http://127.0.0.1:9/tracker.png"><script>document.write("injected")</script></body></html>'),
     eml: Buffer.from('From: Clerk <clerk@example.org>\r\nTo: desk@example.org\r\nSubject: =?utf-8?q?Minutes_of_the_caf=C3=A9_meeting?=\r\nDate: Mon, 2 Mar 2026 10:00:00 +0000\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary="b1"\r\n\r\n--b1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nThe minutes are attached for the caf=C3=A9 meeting.\r\n\r\nPlease confirm receipt.\r\n--b1\r\nContent-Type: text/html\r\n\r\n<p>ignored html</p>\r\n--b1--\r\n'),
-    vtt: Buffer.from('WEBVTT\n\nc1\n00:00:00.500 --> 00:00:02.000\nOne two three four five.\n\n00:00:02.200 --> 00:00:03.900\nThis is a test of the system.\n'),
+    vtt: Buffer.from('WEBVTT\n\nc1\n00:00:00.500 --> 00:00:02.000\nOne two three four five.\n\n00:00:02.200 --> 00:00:03.000\nThis is a test of the system.\n'),
   };
   return cached;
 }

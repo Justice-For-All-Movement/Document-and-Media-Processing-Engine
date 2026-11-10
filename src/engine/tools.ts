@@ -231,7 +231,7 @@ export async function pdfTextLayout(runner: ToolRunner, cwd: string, file: strin
 }
 export async function pdfRasterize(runner: ToolRunner, cwd: string, file: string, page: number, dpi: number, out: string, colour = false): Promise<string> {
   await runner.run('pdftoppm', ['-f', String(page), '-l', String(page), '-r', String(dpi), ...(colour ? [] : ['-gray']), '-png', '-singlefile', file, out], { cwd });
-  return `${out}.png`;
+  return join(cwd, `${out}.png`);
 }
 
 // ───────────────────────────── OCR ─────────────────────────────

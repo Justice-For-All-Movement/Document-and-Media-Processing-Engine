@@ -1,7 +1,8 @@
 // Replaceable speech-recognition, translation and speaker-segmentation adapters.
 // Local adapters run real tools on this machine. External adapters transmit content to a configured provider and are
 // only ever invoked by the engine after the project processing policy (and the use-decision port) allowed it.
-import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { DomainError, invariant } from '../contracts.ts';
@@ -178,7 +179,12 @@ export function apertiumAdapter(runner: ToolRunner): TranslationAdapter {
     if (await which('apertium') === null) return [];
     try { return (await runner.workdir((cwd) => runner.run('apertium', ['-l'], { cwd, timeoutMs: 30_000 }))).stdout.toString('utf8').split('\n').map((l) => l.trim()).filter((l) => /^[a-z]{2,3}-[a-z]{2,3}$/.test(l)); } catch { return []; }
   })();
-  const once = async (input: TranslationInput, text: string): Promise<string> => (await runner.run('apertium', ['-u', '-f', 'txt', `${input.source}-${input.target}`], { cwd: input.cwd, input: Buffer.from(`${text}\n`, 'utf8'), ...(input.signal === undefined ? {} : { signal: input.signal }) })).stdout.toString('utf8');
+  // The launcher opens /dev/stdin by path, which fails for a socket-backed pipe; a file in the private working directory is used instead.
+  const once = async (input: TranslationInput, text: string): Promise<string> => {
+    const file = join(input.cwd, `mt-${randomUUID()}.txt`);
+    await writeFile(file, `${text}\n`, { mode: 0o600 });
+    return (await runner.run('apertium', ['-u', '-f', 'txt', `${input.source}-${input.target}`, file], { cwd: input.cwd, ...(input.signal === undefined ? {} : { signal: input.signal }) })).stdout.toString('utf8');
+  };
   return {
     id: 'apertium', local: true,
     async describe() {
