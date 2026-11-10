@@ -59,6 +59,18 @@
     "./node-reconciliation-listener": {
       "types": "./dist/node-reconciliation-listener.d.ts",
       "default": "./dist/node-reconciliation-listener.js"
+    },
+    "./engine": {
+      "types": "./dist/engine/index.d.ts",
+      "default": "./dist/engine/index.js"
+    },
+    "./serve": {
+      "types": "./dist/engine/serve.d.ts",
+      "default": "./dist/engine/serve.js"
+    },
+    "./service-kit": {
+      "types": "./dist/service-kit.d.ts",
+      "default": "./dist/service-kit.js"
     }
   },
   "engines": {
@@ -66,27 +78,32 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.ts",
+    "test": "node --test --test-concurrency=2 tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && node scripts/validate-pr-registry.mjs",
     "build": "tsc -p tsconfig.build.json",
     "prepare": "npm run build",
     "test:docker": "node --test integration/docker-pdf.test.ts",
     "test:docker:ocr": "node --test integration/docker-ocr.test.ts",
-    "test:postgres": "node --test integration/postgres-text-jobs.test.ts"
+    "test:postgres": "node --test integration/postgres-text-jobs.test.ts",
+    "serve": "node src/engine/serve.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.12",
     "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
     "typescript": "7.0.2"
   },
   "files": [
     "dist",
+    "tools",
+    "scripts/install-tools.sh",
     "README.md",
     "docs"
   ],
   "dependencies": {
     "@accountability/evidence": "github:neophilism/Evidence-Storage-and-Provenance-Engine#dce7105a70b42d77afe4cd48d34723331447037c",
     "@accountability/evidence-service-sdk": "github:neophilism/Evidence-Storage-and-Provenance-Engine#c9aafd0cc7d655e4dc3f8b5b8b833ef102d4cf2b",
-    "@accountability/identity-policy": "github:neophilism/Identity-Authorization-and-Policy-Engine#43bcccfba577114f51954f868906280ed7b7ba56"
+    "@accountability/identity-policy": "github:neophilism/Identity-Authorization-and-Policy-Engine#43bcccfba577114f51954f868906280ed7b7ba56",
+    "pg": "8.23.1"
   }
 }
