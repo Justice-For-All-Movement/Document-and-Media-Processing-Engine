@@ -78,7 +78,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test --test-concurrency=2 tests/*.test.ts",
+    "test": "node --test --test-concurrency=2 \"tests/!(engine*).test.ts\" && node --test --test-concurrency=1 \"tests/engine*.test.ts\"",
     "check": "npm run typecheck && npm test && npm run build && node scripts/validate-pr-registry.mjs",
     "build": "tsc -p tsconfig.build.json",
     "prepare": "npm run build",
@@ -101,9 +101,9 @@
     "docs"
   ],
   "dependencies": {
-    "@accountability/evidence": "github:neophilism/Evidence-Storage-and-Provenance-Engine#dce7105a70b42d77afe4cd48d34723331447037c",
-    "@accountability/evidence-service-sdk": "github:neophilism/Evidence-Storage-and-Provenance-Engine#c9aafd0cc7d655e4dc3f8b5b8b833ef102d4cf2b",
-    "@accountability/identity-policy": "github:neophilism/Identity-Authorization-and-Policy-Engine#43bcccfba577114f51954f868906280ed7b7ba56",
+    "@accountability/evidence": "github:Justice-For-All-Movement/Evidence-Storage-and-Provenance-Engine#dce7105a70b42d77afe4cd48d34723331447037c",
+    "@accountability/evidence-service-sdk": "github:Justice-For-All-Movement/Evidence-Storage-and-Provenance-Engine#c9aafd0cc7d655e4dc3f8b5b8b833ef102d4cf2b",
+    "@accountability/identity-policy": "github:Justice-For-All-Movement/Identity-Authorization-and-Policy-Engine#43bcccfba577114f51954f868906280ed7b7ba56",
     "pg": "8.23.1"
   }
 }

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DomainError } from '../src/contracts.ts';
@@ -30,6 +30,7 @@ let cached: Fixtures | undefined;
 export function fixtures(): Fixtures {
   if (cached !== undefined) return cached;
   const dir = mkdtempSync(join(tmpdir(), 'e06-fixtures-'));
+  process.once('exit', () => rmSync(dir, { recursive: true, force: true }));
   writeFileSync(join(dir, 'doc.md'), `# Title\n\n${KNOWN.pdfLine1}\n\n${KNOWN.pdfLine2}\n`);
   run('pandoc', ['doc.md', '-o', 'doc.docx'], dir);
   run('soffice', [`-env:UserInstallation=file://${dir}/lo`, '--headless', '--norestore', '--convert-to', 'pdf', '--outdir', dir, 'doc.docx'], dir);
