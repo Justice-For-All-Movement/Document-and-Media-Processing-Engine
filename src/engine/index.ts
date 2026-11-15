@@ -8,6 +8,7 @@ import { importWebVtt } from '../captions.ts';
 import * as kit from '../service-kit.ts';
 import type { AuditRecord, EngineEvent, EngineManifestV1, Inspection, Job, Migration, Route, SearchHit, ServiceContext, Sql, StandardEngine, UpstreamChange } from '../service-kit.ts';
 import * as tools from './tools.ts';
+import { extractCandidates } from './extract.ts';
 import type { Family, LanguageProfile, PageInfo, SegmentDraft, Sniffed, ToolLimits, Word } from './tools.ts';
 import * as adapters from './adapters.ts';
 import type { AsrAdapter, Availability, EngineInfo, PocketsphinxConfig, ProviderConfig, TranslationAdapter, WhisperCommandConfig } from './adapters.ts';
@@ -923,6 +924,23 @@ export function createEngine(deps: EngineDeps): ProcessingEngine {
       if (output.representation !== undefined) {
         const made = await insertRepresentation(tx, ctx, p, step.id, output.representation);
         rep = { id: made.id, revision: 1 };
+        // Structured extraction proposals over the stored text (not over translations: those are machine output already).
+        if (output.representation.kind !== 'translation') {
+          const segs = output.representation.segments;
+          const selector = (i: number, start?: number, end?: number): Json => {
+            const g = segs[i] as tools.SegmentDraft;
+            return { representation: repRef(made.id, 1), segmentId: made.segmentIds[i] as string, ...(start === undefined ? {} : { start, end: end as number }),
+              ...(g.page === undefined ? {} : { page: g.page }), ...(g.bbox === undefined ? {} : { bbox: g.bbox }), ...(g.startMs === undefined ? {} : { startMs: g.startMs, endMs: g.endMs ?? null }) };
+          };
+          for (const c of extractCandidates(segs, { max: 500 })) {
+            const data = c.type === 'table'
+              ? { type: c.type, rows: c.rows, delimiter: c.delimiter, pattern: c.pattern, selectors: c.segments.map((i) => selector(i)) }
+              : { ...c, span: undefined, quote: c.span.quote, selector: selector(c.span.segment, c.span.start, c.span.end) };
+            await tx.query(`insert into ${S}.observation (id, tenant_id, project_id, processing_id, step_id, kind, page, data, tool, tool_version, caveat, created_at) values ($1,$2,$3,$4,$5,'extraction',$6,$7::jsonb,'rule-extractor',$8,$9,$10)`,
+              [randomUUID(), ctx.tenantId, ctx.projectId, proc.id, step.id, c.type === 'table' ? (segs[c.segments[0] as number]?.page ?? null) : (segs[c.span.segment]?.page ?? null), J(JSON.parse(JSON.stringify(data))), manifest.version,
+                'Pattern-based proposal, not a verified fact. Check it against the cited span; ambiguous dates carry every reading.', ctx.now]);
+          }
+        }
         if (output.representation.kind === 'translation') await kit.emitEvent(tx, S, ctx, 'translation.completed', repRef(made.id, 1), { evidenceRef: proc.evidence_ref, sourceRef: output.representation.sourceRef, language: output.representation.language, machineTranslation: true, engine: output.representation.engine });
       }
       for (const d of stored) await insertDerivative(tx, ctx, p, step.id, d, d.kind === 'searchable_pdf' ? rep : undefined);

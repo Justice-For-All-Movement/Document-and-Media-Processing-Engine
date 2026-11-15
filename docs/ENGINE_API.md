@@ -77,7 +77,8 @@ The standalone server has no HTTP client for a remote E05; a host embeds `create
   boxes, confidences (0..1 or `null` = unknown) and timestamps.
 - **Observation** — `metadata` (exiftool, ffprobe, pdfinfo, message headers; always `forgeable: true, verified: false`
   with a caveat), `quality` (per OCR page: word count, mean/min confidence, low-confidence words, languages, dpi, skew,
-  orientation, script; transcription; speaker segmentation), `language`, `warning`.
+  orientation, script; transcription; speaker segmentation), `language`, `warning`, `extraction` (structured extraction
+  proposals, below).
 - **Derivative** `E06:derivative:<id>` — `thumbnail`, `waveform`, `searchable_pdf`, `redacted_text`; bytes in the object
   store and registered through `EvidencePort.addDerivative` (`relation` = kind, idempotency key from processing id + digest).
 - **Speaker turn** — provisional cluster label `Speaker A/B/…`, `provisional: true` (enforced by a CHECK constraint).
@@ -270,10 +271,23 @@ LibreOffice 24.2, apertium 3.9.4 (apertium-eng-spa 0.8.1), pocketsphinx 5.1.1.
 - Language identification is a function-word profile match among configured languages (8 built-in profiles); it reports
   `null` when unsure. It is not a general language detector. OCR `auto` uses tesseract OSD script detection.
 - Diarization has no overlap handling, no speaker embeddings from a trained model and was not evaluated on real speech.
-- No GPU workers, no image/audio/video redaction, no table or form structure extraction, no handwriting model, no
-  "structured extraction proposals" beyond segments, words and observations.
+- No GPU workers, no image/audio/video redaction, no form-field structure extraction, no handwriting model. Extraction
+  proposals are rule-based (English month names; no machine-learned entity extraction).
 - Password-protected PDFs fail with a clear error; attachments inside e-mail are not opened.
 - Container isolation is not wired into the service layer (see above). No independent security review.
 - The earlier foundation modules (`text-jobs`, `text-outputs`, reconciliation HTTP, `translation`, Docker runtimes) are
   kept with their tests but the service layer does not use them, except `captions.ts` (`importWebVtt`).
 - Not deployed to a hosted environment.
+
+## Structured extraction proposals
+
+After each stored text representation (not translations) the engine records observations of kind `extraction`:
+`date` (ISO, "3 March 2019", "March 3, 2019", numeric; a numeric date that reads both day-first and month-first carries
+`normalized: null` and both `readings`), `amount` (currency symbol or ISO code with the number; `minorUnits` is `null`
+when the separators are ambiguous such as `1,234`; a bare `$` is reported as USD with a caveat), `reference` (labelled
+reference numbers such as `Contract No. …`), `link` (http/https URLs, never fetched) and `table` (two or more consecutive
+single-line segments split into the same number of cells by `|`, tab, `;` or runs of spaces). Each carries the exact
+quote and a selector `{ representation, segmentId, start, end, page?, bbox?, startMs?, endMs? }` that round-trips to the
+stored segment text; tables carry one selector per row. They are proposals with the caveat "not a verified fact".
+E-mail addresses and telephone numbers are deliberately not extracted. Read them with `listObservations(ctx, id, { kind:
+'extraction' })` / `GET /v1/processing/:id/observations?kind=extraction`.
