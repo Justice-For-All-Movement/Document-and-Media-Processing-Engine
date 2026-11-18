@@ -43,6 +43,11 @@ test('language identification reports confidence and declines to guess', () => {
   assert.equal(tools.detectLanguage('El consejo aprobó el presupuesto y lo envió a la junta para su revisión antes de la reunión.', p).language, 'spa');
   const ukr = tools.detectLanguage('Рада затвердила бюджет і надіслала його до правління для розгляду, але це не було остаточним рішенням.', p);
   assert.equal(ukr.language, 'ukr'); assert.equal(ukr.script, 'Cyrillic'); assert.ok(ukr.confidence > 0.2 && ukr.confidence < 1);
+  // Arabic-script languages share a script; function words and letter forms tell them apart.
+  assert.equal(tools.detectLanguage('شورای شهر بودجه را تصویب کرد و آن را برای بررسی به هیئت مدیره فرستاد، اما این تصمیم نهایی نبود.', p).language, 'fas');
+  assert.equal(tools.detectLanguage('وافق المجلس على الميزانية وأرسلها إلى مجلس الإدارة للمراجعة قبل الاجتماع، لكن هذا لم يكن قرارا نهائيا.', p).language, 'ara');
+  assert.equal(tools.detectLanguage('کونسل نے بجٹ کی منظوری دی اور اسے بورڈ کو جائزے کے لیے بھیج دیا، لیکن یہ حتمی فیصلہ نہیں تھا۔', p).language, 'urd');
+  assert.equal(tools.scriptOf('شورای شهر'), 'Arabic');
   assert.deepEqual([tools.detectLanguage('4471 2026 77', p).language, tools.detectLanguage('Zxq vrrt plomb', p).language, tools.detectLanguage('', p).confidence], [null, null, 0]);
   assert.deepEqual(Object.keys(tools.detectLanguage('the and of', { xx: { script: 'Latin', stopwords: ['the'] } }).scores), ['xx'], 'profiles are deployment data');
 });
