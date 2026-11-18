@@ -268,8 +268,11 @@ LibreOffice 24.2, apertium 3.9.4 (apertium-eng-spa 0.8.1), pocketsphinx 5.1.1.
 - Local ASR covers the language(s) with a configured PocketSphinx model (bundled: en-US). Other languages yield
   `unavailable` unless Whisper or a provider is configured. Recognition quality on real recordings was not measured.
 - Local translation covers installed Apertium pairs only (here `eng-spa`/`spa-eng`).
-- Language identification is a function-word profile match among configured languages (8 built-in profiles); it reports
-  `null` when unsure. It is not a general language detector. OCR `auto` uses tesseract OSD script detection.
+- Language identification is a function-word profile match among configured languages (12 built-in profiles: eng, spa,
+  fra, deu, por, ukr, rus, bul, and the Arabic-script ara, fas, urd plus heb); it reports `null` when unsure. It is not a
+  general language detector. OCR `auto` uses tesseract OSD script detection and then the installed languages whose
+  profile has that script, so Arabic-script pages are read with `ara`/`fas`/`urd` data when it is installed
+  (`OCR_LANGUAGES="eng fas ara" scripts/install-tools.sh`). An organization can instead fix the OCR languages in its policy.
 - Diarization has no overlap handling, no speaker embeddings from a trained model and was not evaluated on real speech.
 - No GPU workers, no image/audio/video redaction, no form-field structure extraction, no handwriting model. Extraction
   proposals are rule-based (English month names; no machine-learned entity extraction).
